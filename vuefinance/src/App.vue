@@ -1,6 +1,5 @@
 <template>
   <div class="form-container">
-    <!-- Форма добавления новой транзакции -->
     <div>
       <input v-model="newTransaction.amount" type="number" placeholder="Сумма">
       <input v-model="newTransaction.date" type="date" placeholder="Дата">
@@ -8,13 +7,10 @@
         <option value="Питание">Питание</option>
         <option value="Транспорт">Транспорт</option>
         <option value="Развлечения">Развлечения</option>
-        <!-- Добавьте другие категории по вашему выбору -->
       </select>
       <button @click="addTransaction">Добавить транзакцию</button>
     </div>
-    
-    <!-- Список добавленных транзакций -->
-    <ul class="transaction-list">
+      <ul class="transaction-list">
       <li v-for="(transaction, index) in transactions" :key="index">
         {{ transaction.amount }} - {{ transaction.date }} - {{ transaction.category }}
       </li>
@@ -29,22 +25,27 @@ export default {
       newTransaction: {
         amount: null,
         date: null,
-        category: 'Питание' // Значение по умолчанию для категории
+        category: 'Питание' 
       },
-      transactions: [] // Массив для хранения транзакций
+      transactions: [] 
     };
   },
+  mounted() {
+    const savedTransactions = localStorage.getItem('transactions');
+    if (savedTransactions) {
+      this.transactions = JSON.parse(savedTransactions);
+    }
+  },
   methods: {
-    // Добавление новой транзакции
     addTransaction() {
       if (this.newTransaction.amount !== null && this.newTransaction.date !== null) {
         this.transactions.push({...this.newTransaction});
+        localStorage.setItem('transactions', JSON.stringify(this.transactions));
         this.resetForm();
       } else {
         alert('Пожалуйста, заполните все поля');
       }
     },
-    // Сброс формы после добавления транзакции
     resetForm() {
       this.newTransaction = {
         amount: null,
@@ -56,8 +57,7 @@ export default {
 };
 </script>
 
-<style>
-/* Стили для формы */
+<style scoped>
 .form-container {
   max-width: 400px;
   margin: 0 auto;
@@ -92,7 +92,6 @@ export default {
   background-color: #45a049;
 }
 
-/* Стили для списка транзакций */
 .transaction-list {
   list-style-type: none;
   padding: 0;
