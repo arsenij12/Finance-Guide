@@ -2,7 +2,7 @@
   <div>
     <header class="header">
       <div class="header-container">
-        <v-dialog v-model="dialog" max-width="400" persistent>
+        <v-dialog v-model="dialogMonthlyProfit" max-width="400" persistent>
           <template v-slot:activator="{ props: activatorProps }">
             <v-btn v-if="activatorProps" v-bind="activatorProps" class="dialog-btn">
               <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><rect fill="none" height="24" width="24"/><path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M16.17,14.76l-1.1-1.1c0.71-1.33,0.53-3.01-0.59-4.13C13.79,8.84,12.9,8.5,12,8.5c-0.03,0-0.06,0.01-0.09,0.01 L13,9.6l-1.06,1.06L9.11,7.83L11.94,5L13,6.06l-0.96,0.96c1.27,0.01,2.53,0.48,3.5,1.44C17.24,10.17,17.45,12.82,16.17,14.76z M14.89,16.17L12.06,19L11,17.94l0.95-0.95c-1.26-0.01-2.52-0.5-3.48-1.46c-1.71-1.71-1.92-4.35-0.64-6.29l1.1,1.1 c-0.71,1.33-0.53,3.01,0.59,4.13c0.7,0.7,1.63,1.04,2.56,1.01L11,14.4l1.06-1.06L14.89,16.17z"/></svg>
@@ -20,7 +20,7 @@
             </v-card-text>
             <template v-slot:actions>
               <div class="dialog-actions">
-                <v-btn @click="dialog = false" class="dialog-btn" color="red darken-1"> 
+                <v-btn @click="dialogMonthlyProfit = false" class="dialog-btn" color="red darken-1"> 
                   Disagree
                 </v-btn>
                 <v-btn  @click="agreeAndSave" class="dialog-btn" color="green darken-1"> 
@@ -34,6 +34,30 @@
           {{ formattedRemainingProfit }}
         </h1>
         <p v-if="notification">{{ notification }}</p>
+        
+        <v-dialog v-model="dialogCircle" max-width="400">
+          <template v-slot:activator="{ props: activatorProps }">
+            <v-btn v-if="activatorProps" v-bind="activatorProps" class="dialog-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><path d="M12,2C6.47,2,2,6.47,2,12c0,5.53,4.47,10,10,10s10-4.47,10-10C22,6.47,17.53,2,12,2z M12,20c-4.42,0-8-3.58-8-8 c0-4.42,3.58-8,8-8s8,3.58,8,8C20,16.42,16.42,20,12,20z"/></g></svg>
+            </v-btn>
+          </template>
+
+          <v-card class="dialog-card">
+            <v-card-title class="dialog-title">
+              Ваш заголовок
+            </v-card-title>
+            <v-card-text class="dialog-content">
+              <CircleModal :radianPercent='radianProfit' :spentAmount='monthlySpent' :remainingAmount='remainingProfit'/>
+            </v-card-text>
+            <template v-slot:actions>
+              <div class="dialog-actions">
+                <v-btn @click="dialogCircle = false" class="dialog-btn" color="red darken-1"> 
+                  Закрыть
+                </v-btn>
+              </div>
+            </template>
+          </v-card>
+        </v-dialog>
       </div>
     </header>
     <main>
@@ -61,42 +85,19 @@
             </div>
           </li>
         </ul>
-        <BarChart :chartdata="chartData" :options="chartOptions"/>
       </div>
     </main>
   </div>
 </template>
 
 <script>
-import BarChart from './components/BarChart';
-
+import CircleModal from './components/CircleModal';
 export default {
-  name: 'BarChar',
-  components: { BarChart },
+  components: {
+    CircleModal 
+  },
   data() {
     return {
-      chartData: {
-        labels: [
-          'January',
-          'February',
-          'March',
-          'April',
-          'May',
-          'June',
-          'July',
-          'August',
-          'September',
-          'October',
-          'November',
-          'December'
-        ],
-        datasets: [
-          {
-            label: 'Data One',
-            data: [40, 20, 12, 39, 10, 40, 39, 80, 40, 20, 12, 11]
-          }
-        ]
-      },
       options: {
         responsive: true,
         maintainAspectRatio: false
@@ -109,7 +110,8 @@ export default {
       incomeData: [], 
       expensesData: [],
       transactions: [],
-      dialog: false,
+      dialogMonthlyProfit: false,
+      dialogCircle: false,
       monthlyProfitInput: null,
       monthlyProfit: null,
       monthlySpent: null,
@@ -123,6 +125,9 @@ export default {
   computed: {
     remainingProfit() {
       return this.monthlyProfit - this.monthlySpent;
+    },
+    radianProfit() {
+      return this.monthlySpent / this.monthlyProfit;
     },
     formattedRemainingProfit() {
       return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(this.remainingProfit);
@@ -163,7 +168,7 @@ export default {
     agreeAndSave() {
       if (this.monthlyProfitInput !== null) {
         localStorage.setItem('monthlyProfit', this.monthlyProfitInput);
-        this.dialog = false;
+        this.dialogMonthlyProfit = false;
         this.monthlyProfit = parseFloat(this.monthlyProfitInput);
       } else {
         alert('Введите значение месячной прибыли');
